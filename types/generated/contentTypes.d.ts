@@ -373,6 +373,208 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCheckpointCheckpoint extends Struct.CollectionTypeSchema {
+  collectionName: 'checkpoints';
+  info: {
+    displayName: 'Checkpoint';
+    pluralName: 'checkpoints';
+    singularName: 'checkpoint';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    isDeleted: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    latitude: Schema.Attribute.Decimal;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::checkpoint.checkpoint'
+    > &
+      Schema.Attribute.Private;
+    longitude: Schema.Attribute.Decimal;
+    name: Schema.Attribute.String;
+    period: Schema.Attribute.Relation<'manyToOne', 'api::period.period'>;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    visits: Schema.Attribute.Relation<'oneToMany', 'api::visit.visit'>;
+  };
+}
+
+export interface ApiDeviceDevice extends Struct.CollectionTypeSchema {
+  collectionName: 'devices';
+  info: {
+    displayName: 'Device';
+    pluralName: 'devices';
+    singularName: 'device';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    code: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    firm: Schema.Attribute.Relation<'manyToOne', 'api::firm.firm'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::device.device'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    visits: Schema.Attribute.Relation<'oneToMany', 'api::visit.visit'>;
+  };
+}
+
+export interface ApiFirmFirm extends Struct.CollectionTypeSchema {
+  collectionName: 'firms';
+  info: {
+    displayName: 'Firm';
+    pluralName: 'firms';
+    singularName: 'firm';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    devices: Schema.Attribute.Relation<'oneToMany', 'api::device.device'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::firm.firm'> &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String;
+    projects: Schema.Attribute.Relation<'oneToMany', 'api::project.project'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    users: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
+export interface ApiPeriodPeriod extends Struct.CollectionTypeSchema {
+  collectionName: 'periods';
+  info: {
+    displayName: 'Period';
+    pluralName: 'periods';
+    singularName: 'period';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    checkpoints: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::checkpoint.checkpoint'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    duration_seconds: Schema.Attribute.Integer;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::period.period'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiProjectProject extends Struct.CollectionTypeSchema {
+  collectionName: 'projects';
+  info: {
+    displayName: 'Project';
+    pluralName: 'projects';
+    singularName: 'project';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    checkpoints: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::checkpoint.checkpoint'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    devices: Schema.Attribute.Relation<'oneToMany', 'api::device.device'>;
+    firm: Schema.Attribute.Relation<'manyToOne', 'api::firm.firm'>;
+    latitude: Schema.Attribute.Decimal;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::project.project'
+    > &
+      Schema.Attribute.Private;
+    longitude: Schema.Attribute.Decimal;
+    name: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVisitVisit extends Struct.CollectionTypeSchema {
+  collectionName: 'visits';
+  info: {
+    displayName: 'Visit';
+    pluralName: 'visits';
+    singularName: 'visit';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    checkpoint: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::checkpoint.checkpoint'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    device: Schema.Attribute.Relation<'manyToOne', 'api::device.device'>;
+    distance: Schema.Attribute.Decimal;
+    latitude: Schema.Attribute.Decimal;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::visit.visit'> &
+      Schema.Attribute.Private;
+    longitude: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    timestamp: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    visit_status: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -828,7 +1030,6 @@ export interface PluginUsersPermissionsUser
   };
   options: {
     draftAndPublish: false;
-    timestamps: true;
   };
   attributes: {
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
@@ -842,6 +1043,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    firm: Schema.Attribute.Relation<'manyToOne', 'api::firm.firm'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -882,6 +1084,12 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::checkpoint.checkpoint': ApiCheckpointCheckpoint;
+      'api::device.device': ApiDeviceDevice;
+      'api::firm.firm': ApiFirmFirm;
+      'api::period.period': ApiPeriodPeriod;
+      'api::project.project': ApiProjectProject;
+      'api::visit.visit': ApiVisitVisit;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
