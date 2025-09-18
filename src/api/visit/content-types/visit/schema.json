@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "visits",
+  "info": {
+    "singularName": "visit",
+    "pluralName": "visits",
+    "displayName": "Visit"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "device": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::device.device",
+      "inversedBy": "visits"
+    },
+    "latitude": {
+      "type": "decimal"
+    },
+    "longitude": {
+      "type": "decimal"
+    },
+    "visit_status": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "checkpoint": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::checkpoint.checkpoint",
+      "inversedBy": "visits"
+    },
+    "distance": {
+      "type": "decimal"
+    },
+    "timestamp": {
+      "type": "datetime"
+    }
+  }
+}

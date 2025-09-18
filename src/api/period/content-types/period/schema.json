@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "periods",
+  "info": {
+    "singularName": "period",
+    "pluralName": "periods",
+    "displayName": "Period"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "duration_seconds": {
+      "type": "integer"
+    },
+    "checkpoints": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::checkpoint.checkpoint",
+      "mappedBy": "period"
+    }
+  }
+}

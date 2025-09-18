@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "checkpoints",
+  "info": {
+    "singularName": "checkpoint",
+    "pluralName": "checkpoints",
+    "displayName": "Checkpoint"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "latitude": {
+      "type": "decimal"
+    },
+    "longitude": {
+      "type": "decimal"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "checkpoints"
+    },
+    "period": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::period.period",
+      "inversedBy": "checkpoints"
+    },
+    "isDeleted": {
+      "type": "boolean",
+      "required": false,
+      "default": false
+    },
+    "visits": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::visit.visit",
+      "mappedBy": "checkpoint"
+    }
+  }
+}

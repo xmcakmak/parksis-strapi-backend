@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Project"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "firm": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::firm.firm",
+      "inversedBy": "projects"
+    },
+    "checkpoints": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::checkpoint.checkpoint",
+      "mappedBy": "project"
+    },
+    "devices": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::device.device",
+      "mappedBy": "project"
+    },
+    "latitude": {
+      "type": "decimal"
+    },
+    "longitude": {
+      "type": "decimal"
+    }
+  }
+}
