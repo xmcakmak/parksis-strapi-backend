@@ -74,6 +74,7 @@ export default {
       // 4. Yeni Visit verisini hazırla ve kaydet
       const visitData = {
         device: device.id,
+        project: projectId,
         latitude: incomingData.loc_lat,
         longitude: incomingData.loc_lng,
         status: incomingData.loc_status || 0,

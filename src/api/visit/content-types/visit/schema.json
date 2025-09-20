@@ -23,11 +23,6 @@
     "longitude": {
       "type": "decimal"
     },
-    "visit_status": {
-      "type": "boolean",
-      "required": true,
-      "default": false
-    },
     "checkpoint": {
       "type": "relation",
       "relation": "manyToOne",
@@ -37,8 +32,18 @@
     "distance": {
       "type": "decimal"
     },
+    "visit_status": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
     "timestamp": {
       "type": "datetime"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project"
     }
   }
 }

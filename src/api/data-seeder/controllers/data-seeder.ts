@@ -1,86 +1,113 @@
+import { faker } from '@faker-js/faker';
+
 export default {
   async run(ctx) {
     try {
-      const { 
-        scenario = 'successful', 
-        checkpointId = 1, 
-        recordCount = 50 
-      } = (ctx.request.body || {}) as any;
+      // 1. Tüm verileri sil
+      await strapi.db.query('api::visit.visit').deleteMany({});
+      await strapi.db.query('api::device.device').deleteMany({});
+      await strapi.db.query('api::checkpoint.checkpoint').deleteMany({});
+      await strapi.db.query('api::period.period').deleteMany({});
+      await strapi.db.query('api::project.project').deleteMany({});
+      await strapi.db.query('api::firm.firm').deleteMany({});
 
-      // 1. İlgili checkpoint'i ve periyodunu bul
-      const checkpoint = await strapi.entityService.findOne('api::checkpoint.checkpoint', checkpointId, {
-        populate: { period: true },
+      // 2. Firma ekle
+      const firm = await strapi.entityService.create('api::firm.firm', {
+        data: { name: 'TEKMER SELALE', publishedAt: new Date() },
       });
 
-      if (!checkpoint) {
-        return ctx.badRequest(`Checkpoint with ID ${checkpointId} not found.`);
-      }
-
-      const periodSeconds = (checkpoint as any).period?.duration_seconds;
-      if (!periodSeconds) {
-        return ctx.badRequest(`Period is not defined for checkpoint ID ${checkpointId}.`);
-      }
-      
-      // 2. O checkpoint'e ait eski Visit kayıtlarını temizle (Doğru yöntem: strapi.db.query)
-      await strapi.db.query('api::visit.visit').delete({
-        where: { checkpoint: checkpointId },
+      // 3. Proje ekle
+      const project = await strapi.entityService.create('api::project.project', {
+        data: {
+          name: 'Güvenlik',
+          latitude: 40.8590341,
+          longitude: 29.3162565,
+          firm: firm.id,
+          publishedAt: new Date(),
+        },
       });
 
-      // 3. Rastgele bir cihaz seç (test için ilk bulduğunu al)
-      const devices = await strapi.entityService.findMany('api::device.device', { limit: 1 });
-      if (devices.length === 0) {
-        return ctx.badRequest('No devices found in the system to create visits.');
-      }
-      const deviceId = devices[0].id;
-
-      // 4. Yeni Visit kayıtlarını oluştur
-      let lastTimestamp = new Date();
-
-      for (let i = 0; i < recordCount; i++) {
-        let interval = 0;
-        if (scenario === 'successful') {
-          const minInterval = periodSeconds * 0.7;
-          const maxInterval = periodSeconds * 0.95;
-          interval = Math.floor(Math.random() * (maxInterval - minInterval + 1) + minInterval);
-        } else if (scenario === 'failed' && (i > 0 && i % 10 === 0)) { // Her 10 kayıtta bir aksama yap
-          interval = periodSeconds * 2;
-        } else {
-          const minInterval = periodSeconds * 0.7;
-          const maxInterval = periodSeconds * 0.95;
-          interval = Math.floor(Math.random() * (maxInterval - minInterval + 1) + minInterval);
-        }
-
-        const newTimestamp = new Date(lastTimestamp.getTime() - interval * 1000);
-        
-        const visitData = {
-          device: deviceId,
-          latitude: checkpoint.latitude,
-          longitude: checkpoint.longitude,
-          status: 0, // Hata mesajına göre bu alanın adı farklı olabilir, gerekirse düzeltiriz.
-          timestamp: newTimestamp.toISOString(),
-          checkpoint: checkpointId,
-          distance: Math.floor(Math.random() * 20 + 1), // 1-20m arası rastgele mesafe
-          publishedAt: new Date(), // Taslak olarak değil, direkt yayınla
-        };
-
-        // Hata mesajına göre 'status' alanını 'visit_status' olarak deniyoruz.
-        // Eğer alan adı farklıysa, burayı tekrar düzenlememiz gerekebilir.
-        const correctedVisitData = { ...visitData, visit_status: visitData.status };
-        delete correctedVisitData.status;
-
-
-        await strapi.entityService.create('api::visit.visit', { data: correctedVisitData as any });
-        
-        lastTimestamp = newTimestamp;
+      // 4. Kontrol noktalarını ekle
+      const checkpointsData = [
+        { name: 'Merkez', latitude: 40.85902364102, longitude: 29.316840338888 },
+        { name: 'Kutup', latitude: 40.858406939973, longitude: 29.316330719175 },
+        { name: 'Giris', latitude: 40.859628164763, longitude: 29.31726949233 },
+      ];
+      const checkpoints = [];
+      for (const cp of checkpointsData) {
+        const checkpoint = await strapi.entityService.create('api::checkpoint.checkpoint', {
+          data: { ...cp, project: project.id, publishedAt: new Date() },
+        });
+        checkpoints.push(checkpoint);
       }
 
-      const message = `${recordCount} visit records were generated for checkpoint ID ${checkpointId} with scenario: '${scenario}'.`;
-      return { success: true, message };
+      // 5. Periyotları ekle
+      const periodsData = [
+        { name: '15 dakika', duration_seconds: 900 },
+        { name: '30 dakika', duration_seconds: 1800 },
+        { name: '45 dakika', duration_seconds: 2700 },
+        { name: '1 saat', duration_seconds: 3600 },
+        { name: '2 saat', duration_seconds: 7200 }
+      ];
+      const periods = [];
+      for (const p of periodsData) {
+        const period = await strapi.entityService.create('api::period.period', {
+          data: {
+            name: p.name,
+            duration_seconds: p.duration_seconds,
+            project: project.id,
+            publishedAt: new Date(),
+          },
+        });
+        periods.push(period);
+      }
 
+      // 6. Cihaz ekle
+      const device = await strapi.entityService.create('api::device.device', {
+        data: {
+          name: 'Güvenlik Cihazı',
+          code: '5551234567',
+          firm: firm.id,
+          project: project.id,
+          publishedAt: new Date(),
+        },
+      });
+
+      // 7. 50 ziyaret kaydı oluştur
+      for (let i = 0; i < 50; i++) {
+        // Rastgele bir checkpoint seç
+        const cp = checkpoints[Math.floor(Math.random() * checkpoints.length)];
+        // Checkpoint'e yakın bir konum üret
+        const lat = cp.latitude + (Math.random() - 0.5) * 0.0002;
+        const lon = cp.longitude + (Math.random() - 0.5) * 0.0002;
+        // Zamanı rastgele seç (son 2 gün içinde)
+        const timestamp = faker.date.recent({ days: 2 });
+
+        await strapi.entityService.create('api::visit.visit', {
+          data: {
+            device: { id: device.id },
+            checkpoint: cp.id,
+            latitude: lat,
+            longitude: lon,
+            timestamp,
+            project: project.id,
+            visit_status: false, // veya true, senaryoya göre
+            publishedAt: new Date(),
+          },
+        });
+      }
+
+      ctx.body = {
+        message: 'Seed işlemi tamamlandı.',
+        firm,
+        project,
+        checkpoints,
+        device,
+      };
     } catch (err) {
       ctx.response.status = 500;
       console.error('Data seeder error:', err);
-      return { success: false, error: err.message };
+      ctx.body = { success: false, error: err.message };
     }
-  }
+  },
 };

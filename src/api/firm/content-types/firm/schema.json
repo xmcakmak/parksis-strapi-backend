@@ -14,16 +14,16 @@
     "name": {
       "type": "string"
     },
-    "projects": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::project.project",
-      "mappedBy": "firm"
-    },
     "devices": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::device.device",
+      "mappedBy": "firm"
+    },
+    "projects": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::project.project",
       "mappedBy": "firm"
     },
     "users": {

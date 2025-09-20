@@ -32,16 +32,16 @@
       "target": "api::period.period",
       "inversedBy": "checkpoints"
     },
-    "isDeleted": {
-      "type": "boolean",
-      "required": false,
-      "default": false
-    },
     "visits": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::visit.visit",
       "mappedBy": "checkpoint"
+    },
+    "isDeleted": {
+      "type": "boolean",
+      "required": false,
+      "default": false
     }
   }
 }

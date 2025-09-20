@@ -14,11 +14,11 @@
     "name": {
       "type": "string"
     },
-    "firm": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::firm.firm",
-      "inversedBy": "projects"
+    "latitude": {
+      "type": "decimal"
+    },
+    "longitude": {
+      "type": "decimal"
     },
     "checkpoints": {
       "type": "relation",
@@ -32,11 +32,17 @@
       "target": "api::device.device",
       "mappedBy": "project"
     },
-    "latitude": {
-      "type": "decimal"
+    "firm": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::firm.firm",
+      "inversedBy": "projects"
     },
-    "longitude": {
-      "type": "decimal"
+    "visits": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::visit.visit",
+      "mappedBy": "project"
     }
   }
 }
