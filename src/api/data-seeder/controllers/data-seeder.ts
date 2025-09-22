@@ -9,7 +9,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     Math.cos(φ1) * Math.cos(φ2) *
     Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // in metres
+  return +(R * c).toFixed(1); // in metres, 1 ondalık basamak
 };
 
 // --- FULL SEED SCENARIO --- 
@@ -28,7 +28,7 @@ const executeFullSeedScenario = async (scenario: 'success' | 'failure') => {
   // 2. Create Firm, Project, Periods
   const firm = await strapi.entityService.create('api::firm.firm', { data: { name: 'TEKMER SELALE', publishedAt: new Date() } });
   const project = await strapi.entityService.create('api::project.project', { data: { name: 'Güvenlik', latitude: 40.8590341, longitude: 29.3162565, firm: firm.id, publishedAt: new Date() } });
-  const periodsData = [{ name: '30 dakika', duration_seconds: 1800 }, { name: '1 saat', duration_seconds: 3600 }, { name: '2 saat', duration_seconds: 7200 }];
+  const periodsData = [{ name: '15 dakika', duration_seconds: 900 },{ name: '30 dakika', duration_seconds: 1800 }, { name: '1 saat', duration_seconds: 3600 }, { name: '2 saat', duration_seconds: 7200 }];
   const periodMap = new Map();
   for (const p of periodsData) {
     const period = await strapi.entityService.create('api::period.period', { data: { ...p, publishedAt: new Date() } });
@@ -52,8 +52,8 @@ const executeFullSeedScenario = async (scenario: 'success' | 'failure') => {
   // 4. Create Device
   const device = await strapi.entityService.create('api::device.device', { data: { name: 'Güvenlik Cihazı', code: '5551234567', firm: firm.id, project: project.id, publishedAt: new Date() } });
 
-  // 5. Generate Visits
-  await generateVisits(scenario, device, checkpointsWithPeriods);
+  // 5. Generate Visits, passing the projectId explicitly
+  await generateVisits(scenario, device, checkpointsWithPeriods, project.id);
 
   return { message: `Full seed işlemi tamamlandı. Senaryo: ${scenario}` };
 };
@@ -66,11 +66,16 @@ const generateVisitsOnly = async (scenario: 'success' | 'failure') => {
   // 1. Find the specific device and its project
   const device = await strapi.db.query('api::device.device').findOne({ where: { code: '5551234567' }, populate: ['project'] });
   if (!device) throw new Error('Device with code 5551234567 not found.');
-  if (!device.project) throw new Error(`Device ${device.code} is not associated with a project.`);
+  
+  // Defensively get the project ID, whether it's an object or a direct ID
+  const projectId = typeof device.project === 'object' && device.project !== null ? device.project.id : device.project;
+  if (!projectId) {
+    throw new Error(`Device ${device.code} is not associated with a project or project ID is invalid.`);
+  }
 
   // 2. Find checkpoints for that project
-  const checkpoints = await strapi.db.query('api::checkpoint.checkpoint').findMany({ where: { project: { id: device.project.id } }, populate: ['period'] });
-  if (!checkpoints || checkpoints.length === 0) throw new Error(`No checkpoints found for project ${device.project.id}.`);
+  const checkpoints = await strapi.db.query('api::checkpoint.checkpoint').findMany({ where: { project: projectId }, populate: ['period'] });
+  if (!checkpoints || checkpoints.length === 0) throw new Error(`No checkpoints found for project ${projectId}.`);
 
   const checkpointsWithPeriods = checkpoints.map(cp => ({ ...cp, period_duration_seconds: cp.period?.duration_seconds })).filter(cp => cp.period_duration_seconds);
   if (checkpointsWithPeriods.length === 0) throw new Error('None of the found checkpoints have an associated period with a duration.');
@@ -79,14 +84,14 @@ const generateVisitsOnly = async (scenario: 'success' | 'failure') => {
   console.log('Deleting old visits...');
   await strapi.db.query('api::visit.visit').deleteMany({});
 
-  // 4. Generate new visits
-  const result = await generateVisits(scenario, device, checkpointsWithPeriods);
+  // 4. Generate new visits, passing the projectId explicitly
+  const result = await generateVisits(scenario, device, checkpointsWithPeriods, projectId);
 
   return { message: `Visit-only generation tamamlandı. Senaryo: ${scenario}`, visits_created: result.visits_created };
 }
 
-// --- CORE VISIT CREATION ENGINE (3rd time's the charm) ---
-async function generateVisits(scenario, device, checkpointsWithPeriods) {
+// --- CORE VISIT CREATION ENGINE (Takes projectId as an argument) ---
+async function generateVisits(scenario, device, checkpointsWithPeriods, projectId) {
   console.log(`Generating visits with chained-interval logic for scenario: ${scenario}...`);
   let totalVisitsCreated = 0;
 
@@ -107,13 +112,11 @@ async function generateVisits(scenario, device, checkpointsWithPeriods) {
         intervalSeconds = periodInSeconds + (Math.random() * periodInSeconds * 0.5);
       } else {
         // For success, the interval is SHORTER than the period
-        // Add a small minimum to avoid zero-second intervals
         intervalSeconds = (Math.random() * 0.9 + 0.05) * periodInSeconds;
       }
 
       const newVisitTime = new Date(lastVisitTime.getTime() + intervalSeconds * 1000);
 
-      // Do not create visits in the future
       if (newVisitTime > simulationEndTime) {
         break;
       }
@@ -126,7 +129,7 @@ async function generateVisits(scenario, device, checkpointsWithPeriods) {
         data: {
           device: device.id,
           checkpoint: cp.id,
-          project: device.project.id,
+          project: projectId, // Use the passed projectId
           latitude: lat,
           longitude: lon,
           timestamp: newVisitTime,
