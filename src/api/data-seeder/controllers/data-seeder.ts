@@ -1,17 +1,3 @@
-// Helper function to calculate distance between two geo-coordinates
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; // metres
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return +(R * c).toFixed(1); // in metres, 1 ondalık basamak
-};
-
 // --- FULL SEED SCENARIO --- 
 // Deletes everything and creates a full dataset from scratch
 const executeFullSeedScenario = async (scenario: 'success' | 'failure') => {
@@ -28,7 +14,7 @@ const executeFullSeedScenario = async (scenario: 'success' | 'failure') => {
   // 2. Create Firm, Project, Periods
   const firm = await strapi.entityService.create('api::firm.firm', { data: { name: 'TEKMER SELALE', publishedAt: new Date() } });
   const project = await strapi.entityService.create('api::project.project', { data: { name: 'Güvenlik', latitude: 40.8590341, longitude: 29.3162565, firm: firm.id, publishedAt: new Date() } });
-  const periodsData = [{ name: '15 dakika', duration_seconds: 900 },{ name: '30 dakika', duration_seconds: 1800 }, { name: '1 saat', duration_seconds: 3600 }, { name: '2 saat', duration_seconds: 7200 }];
+  const periodsData = [{ name: '30 dakika', duration_seconds: 1800 }, { name: '1 saat', duration_seconds: 3600 }, { name: '2 saat', duration_seconds: 7200 }];
   const periodMap = new Map();
   for (const p of periodsData) {
     const period = await strapi.entityService.create('api::period.period', { data: { ...p, publishedAt: new Date() } });
@@ -123,7 +109,7 @@ async function generateVisits(scenario, device, checkpointsWithPeriods, projectI
 
       const lat = cp.latitude + (Math.random() - 0.5) * 0.0001;
       const lon = cp.longitude + (Math.random() - 0.5) * 0.0001;
-      const distance = calculateDistance(cp.latitude, cp.longitude, lat, lon);
+      const distance = strapi.service('api::geo.geo').calculateDistance(cp.latitude, cp.longitude, lat, lon);
 
       await strapi.entityService.create('api::visit.visit', {
         data: {
